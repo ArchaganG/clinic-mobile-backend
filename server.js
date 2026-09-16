@@ -1,7 +1,9 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const { isCloudinaryConfigured } = require('./config/cloudinary');
 
 connectDB();
 
@@ -27,4 +29,7 @@ app.use(require('./middleware/errorHandler'));
 const PORT = process.env.PORT || 5050;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(
+    `Cloudinary: ${isCloudinaryConfigured() ? 'configured' : 'MISSING — add CLOUDINARY_* keys to chagan-backend/.env'}`
+  );
 });

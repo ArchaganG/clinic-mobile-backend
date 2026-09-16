@@ -1,13 +1,8 @@
-const cloudinary = require('../config/cloudinary');
-
-const isConfigured = () => {
-  const cfg = cloudinary.config();
-  return Boolean((cfg.cloud_name && cfg.api_key && cfg.api_secret) || process.env.CLOUDINARY_URL);
-};
+const { cloudinary, isCloudinaryConfigured, ensureCloudinaryConfigured } = require('../config/cloudinary');
 
 const uploadImageBuffer = (buffer, folder = 'chagan/avatars') =>
   new Promise((resolve, reject) => {
-    if (!isConfigured()) {
+    if (!ensureCloudinaryConfigured()) {
       const err = new Error('Image upload is not configured on the server');
       err.statusCode = 500;
       return reject(err);
@@ -25,8 +20,9 @@ const uploadImageBuffer = (buffer, folder = 'chagan/avatars') =>
   });
 
 const deleteImage = async (publicId) => {
-  if (!publicId || !isConfigured()) return;
+  if (!publicId || !isCloudinaryConfigured()) return;
   try {
+    ensureCloudinaryConfigured();
     await cloudinary.uploader.destroy(publicId);
   } catch {
     // Ignore cleanup failures so profile updates still succeed.
