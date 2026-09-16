@@ -9,6 +9,7 @@ const {
   parseSlotRange,
   rangesOverlap,
   slotWithinAvailability,
+  isAppointmentInThePast,
 } = require('../utils/slots');
 const { ensureInvoiceForAppointment } = require('../utils/billing');
 
@@ -63,6 +64,13 @@ exports.createAppointment = async (req, res, next) => {
     }
 
     const normalizedSlot = normalizeSlotString(timeSlot);
+
+    if (isAppointmentInThePast(appointmentDate, normalizedSlot)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot book an appointment in the past. Please choose a future date and time.',
+      });
+    }
 
     if (!slotWithinAvailability(doctor, appointmentDate, normalizedSlot)) {
       return res.status(400).json({
@@ -296,6 +304,13 @@ exports.rescheduleAppointment = async (req, res, next) => {
     }
 
     const normalizedSlot = normalizeSlotString(timeSlot);
+
+    if (isAppointmentInThePast(appointmentDate, normalizedSlot)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot reschedule to a past date or time. Please choose a future slot.',
+      });
+    }
 
     if (!slotWithinAvailability(doctor, appointmentDate, normalizedSlot)) {
       return res.status(400).json({

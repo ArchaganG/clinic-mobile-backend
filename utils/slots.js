@@ -94,6 +94,22 @@ const normalizeSlotString = (timeSlot) => {
 
 const rangesOverlap = (a, b) => a.start < b.end && b.start < a.end;
 
+const isAppointmentInThePast = (date, timeSlot) => {
+  const day = startOfDay(date);
+  if (!day) return true;
+
+  const now = new Date();
+  const today = startOfDay(now);
+  if (day < today) return true;
+  if (day > today) return false;
+
+  const range = parseSlotRange(timeSlot);
+  if (!range) return false;
+
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  return range.start <= nowMinutes;
+};
+
 /** Accept full availability windows OR any sub-slot fully inside a window. */
 const slotWithinAvailability = (doctor, date, timeSlot) => {
   const dayName = DAY_NAMES[date.getDay()];
@@ -131,7 +147,7 @@ const buildDaySlots = (doctor, date, bookedAppointments = [], excludeId = null) 
         timeSlot,
         start: minutesToTime(range.start),
         end: minutesToTime(range.end),
-        available: !taken,
+        available: !taken && !isAppointmentInThePast(date, timeSlot),
       });
     }
   });
@@ -150,5 +166,6 @@ module.exports = {
   normalizeSlotString,
   rangesOverlap,
   slotWithinAvailability,
+  isAppointmentInThePast,
   buildDaySlots,
 };
