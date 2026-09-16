@@ -7,12 +7,14 @@ const {
   endOfDay,
   buildDaySlots,
 } = require('../utils/slots');
+const { applyAvatarUpload } = require('../utils/cloudinaryUpload');
+const { parseMaybeJson } = require('../utils/parseBody');
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const populateUser = {
   path: 'userId',
-  select: 'name email phone role',
+  select: 'name email phone role avatarUrl',
 };
 
 const sanitizeAvailability = (availability = []) => {
@@ -156,10 +158,10 @@ exports.createDoctor = async (req, res, next) => {
       phone,
       specialization,
       consultationFee,
-      availability,
       about,
       userId,
     } = req.body;
+    const availability = parseMaybeJson(req.body.availability);
 
     let user;
 
@@ -203,6 +205,15 @@ exports.createDoctor = async (req, res, next) => {
         success: false,
         message: 'Doctor profile already exists for this user',
       });
+    }
+
+    if (req.file) {
+      const withAvatar = await User.findById(user._id).select('+avatarPublicId');
+      if (withAvatar) {
+        await applyAvatarUpload(withAvatar, req.file);
+        await withAvatar.save();
+        user = withAvatar;
+      }
     }
 
     if (!specialization || consultationFee === undefined || consultationFee === null) {
@@ -260,7 +271,8 @@ exports.updateDoctor = async (req, res, next) => {
       });
     }
 
-    const { specialization, consultationFee, availability, about, name, phone } = req.body;
+    const { specialization, consultationFee, about, name, phone } = req.body;
+    const availability = parseMaybeJson(req.body.availability);
 
     if (isAdmin) {
       if (specialization !== undefined) doctor.specialization = String(specialization).trim();
@@ -287,11 +299,14 @@ exports.updateDoctor = async (req, res, next) => {
 
     await doctor.save();
 
-    if ((name !== undefined || phone !== undefined) && (isAdmin || isOwner)) {
-      const user = await User.findById(doctor.userId);
+    if ((name !== undefined || phone !== undefined || req.file) && (isAdmin || isOwner)) {
+      const user = await User.findById(doctor.userId).select('+avatarPublicId');
       if (user) {
         if (name !== undefined) user.name = String(name).trim();
         if (phone !== undefined) user.phone = String(phone).trim();
+        if (req.file) {
+          await applyAvatarUpload(user, req.file);
+        }
         await user.save();
       }
     }

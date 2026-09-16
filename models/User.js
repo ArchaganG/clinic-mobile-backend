@@ -31,6 +31,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    avatarUrl: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    avatarPublicId: {
+      type: String,
+      default: '',
+      select: false,
+    },
   },
   { timestamps: true }
 );

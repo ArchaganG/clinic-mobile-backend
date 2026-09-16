@@ -13,10 +13,10 @@ const {
 const { ensureInvoiceForAppointment } = require('../utils/billing');
 
 const populateFields = [
-  { path: 'patientId', select: 'name email phone role' },
+  { path: 'patientId', select: 'name email phone role avatarUrl' },
   {
     path: 'doctorId',
-    populate: { path: 'userId', select: 'name email phone' },
+    populate: { path: 'userId', select: 'name email phone avatarUrl' },
   },
 ];
 

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { applyAvatarUpload } = require('../utils/cloudinaryUpload');
 
 const signToken = (user) =>
   jwt.sign(
@@ -14,6 +15,7 @@ const sanitizeUser = (user) => ({
   email: user.email,
   role: user.role,
   phone: user.phone || '',
+  avatarUrl: user.avatarUrl || '',
 });
 
 exports.register = async (req, res, next) => {
@@ -52,6 +54,11 @@ exports.register = async (req, res, next) => {
       role: nextRole,
       phone: phone ? String(phone).trim() : '',
     });
+
+    if (req.file) {
+      await applyAvatarUpload(user, req.file);
+      await user.save();
+    }
 
     const token = signToken(user);
 
@@ -131,13 +138,17 @@ exports.me = async (req, res, next) => {
 
 exports.updateProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.userId);
+    const user = await User.findById(req.user.userId).select('+avatarPublicId');
 
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found',
       });
+    }
+
+    if (req.file) {
+      await applyAvatarUpload(user, req.file);
     }
 
     const { name, phone, email } = req.body;

@@ -147,7 +147,7 @@ exports.getDoctorPatients = async (req, res, next) => {
       doctorId: doctor._id,
       status: { $in: ['Approved', 'Completed'] },
     })
-      .populate({ path: 'patientId', select: 'name email phone' })
+      .populate({ path: 'patientId', select: 'name email phone avatarUrl' })
       .sort({ date: -1 });
 
     const byPatient = new Map();
@@ -185,7 +185,7 @@ exports.getEligibleAppointments = async (req, res, next) => {
       doctorId: doctor._id,
       status: { $in: ['Approved', 'Completed'] },
     })
-      .populate({ path: 'patientId', select: 'name email phone' })
+      .populate({ path: 'patientId', select: 'name email phone avatarUrl' })
       .sort({ date: -1 });
 
     return res.status(200).json({ success: true, data: { appointments } });

@@ -11,6 +11,7 @@ const {
 } = require('../controllers/doctorController');
 const auth = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
+const { uploadAvatar } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -21,8 +22,8 @@ router.get('/specializations', listSpecializations);
 router.get('/me', roleCheck('doctor'), getMyDoctorProfile);
 router.get('/:id/slots', getDoctorDaySlots);
 router.get('/:id', getDoctor);
-router.post('/', roleCheck('admin'), createDoctor);
-router.put('/:id', roleCheck('admin', 'doctor'), updateDoctor);
+router.post('/', roleCheck('admin'), uploadAvatar, createDoctor);
+router.put('/:id', roleCheck('admin', 'doctor'), uploadAvatar, updateDoctor);
 router.delete('/:id', roleCheck('admin'), deleteDoctor);
 
 module.exports = router;
